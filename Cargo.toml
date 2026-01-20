@@ -1,0 +1,17 @@
+[package]
+name = "svgpath"
+version = "0.1.0"
+authors = ["Nor Khasyatillah <mazznoer@ymail.com>"]
+edition = "2024"
+description = "SVG Path Data parser"
+readme = "README.md"
+repository = "https://github.com/mazznoer/svgpath-rs"
+documentation = "https://docs.rs/svgpath/"
+license = "MIT OR Apache-2.0"
+keywords = ["svg", "path", "parser"]
+categories = ["graphics", "parser-implementations"]
+exclude = [
+	".github/*",
+]
+
+[dependencies]
