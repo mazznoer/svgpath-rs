@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build
+      run: |
+        cargo build
+    #    cargo build --examples
+
+    - name: Run tests
+      run: |
+        cargo test
+
+    - name: Run cargo clippy
+      run: |
+        cargo clippy -- -D warnings
+
+    - name: Run cargo fmt
+      run: |
+        cargo fmt --all -- --check
