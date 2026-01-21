@@ -211,10 +211,10 @@ impl<'a> Parser<'a> {
 
         while let Some(token_result) = self.lexer.peek() {
             // Check for leading numbers ("6" or "6 M 0 0")
-            if last_cmd_char.is_none() {
-                if let Ok(Token::Number(_)) = token_result {
-                    return Err(ParserError::NoStartingCommand);
-                }
+            if last_cmd_char.is_none()
+                && let Ok(Token::Number(_)) = token_result
+            {
+                return Err(ParserError::NoStartingCommand);
             }
 
             // Consume the token we just peeked
