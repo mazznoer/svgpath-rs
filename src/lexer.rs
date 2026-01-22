@@ -1,25 +1,25 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Command(char),
     Number(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LexerError {
     UnexpectedCharacter(char),
     InvalidCommand(char),
     InvalidNumber(String),
 }
 
-pub struct Lexer<'a> {
+pub(crate) struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
+    pub(crate) fn new(input: &'a str) -> Self {
         Lexer {
             input: input.chars().peekable(),
         }

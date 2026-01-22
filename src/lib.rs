@@ -1,5 +1,6 @@
 mod lexer;
 mod parser;
+mod path;
 
-pub use lexer::*;
-pub use parser::*;
+pub use parser::{Command, ParserError};
+pub use path::{Path, parse};

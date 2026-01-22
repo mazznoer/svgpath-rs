@@ -1,8 +1,8 @@
+use std::error::Error;
 use std::fmt;
-use std::fmt::Write;
 use std::iter::Peekable;
 
-use crate::{Lexer, LexerError, Token};
+use crate::lexer::{Lexer, LexerError, Token};
 
 #[derive(Debug, Clone)]
 pub enum Command {
@@ -150,16 +150,7 @@ fn format_n(n: f64) -> String {
     }
 }
 
-pub fn stringify(commands: &[Command]) -> String {
-    let mut s = String::new();
-    for cmd in commands {
-        write!(&mut s, "{cmd} ").unwrap();
-    }
-    s.pop();
-    s
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ParserError {
     LexerErr(LexerError),
     UnexpectedToken(Token),
@@ -172,6 +163,15 @@ pub enum ParserError {
     EndOfStream,
 }
 
+impl fmt::Display for ParserError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // TODO
+        write!(f, "parser error")
+    }
+}
+
+impl Error for ParserError {}
+
 impl From<LexerError> for ParserError {
     fn from(err: LexerError) -> Self {
         ParserError::LexerErr(err)
@@ -179,12 +179,12 @@ impl From<LexerError> for ParserError {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Point {
+pub(crate) struct Point {
     pub x: f64,
     pub y: f64,
 }
 
-pub struct Parser<'a> {
+pub(crate) struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
     cursor: Point,
     start_point: Point,
@@ -192,7 +192,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(input: &'a str) -> Self {
+    pub(crate) fn new(input: &'a str) -> Self {
         Self {
             lexer: Lexer::new(input).peekable(),
             cursor: Point { x: 0.0, y: 0.0 },
@@ -201,7 +201,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Command>, ParserError> {
+    pub(crate) fn parse(&mut self) -> Result<Vec<Command>, ParserError> {
         if self.lexer.peek().is_none() {
             return Err(ParserError::EndOfStream);
         }
@@ -407,6 +407,16 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod t {
     use super::*;
+    use std::fmt::Write;
+
+    fn stringify(commands: &[Command]) -> String {
+        let mut s = String::new();
+        for cmd in commands {
+            write!(&mut s, "{cmd} ").unwrap();
+        }
+        s.pop();
+        s
+    }
 
     #[test]
     fn basic() {
