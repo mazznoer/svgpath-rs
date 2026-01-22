@@ -4,7 +4,7 @@ use std::iter::Peekable;
 
 use crate::lexer::{Lexer, LexerError, Token};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Command {
     Move {
         x: f64,

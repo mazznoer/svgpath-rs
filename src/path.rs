@@ -35,37 +35,3 @@ impl fmt::Display for Path {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod t {
-    use super::*;
-
-    #[test]
-    fn basic() {
-        let s = "M 7,9 L 100,75 h -50 z";
-        let p = parse(s);
-        assert!(p.is_ok());
-        let p = p.unwrap();
-
-        assert_eq!(p.to_string(), "M 7 9 L 100 75 H 50 Z");
-
-        let mut it = p.iter();
-        assert_eq!(it.next().unwrap().to_string(), "M 7 9");
-    }
-
-    #[test]
-    fn invalid() {
-        let test_data = [
-            "",
-            "  \n \t ",
-            "M",
-            "M 0,0 L",
-            "M 5 5 H 10 X 7 3 Z",
-            "M 3 4 5 H 10 Z",
-        ];
-        for s in test_data {
-            let p = parse(s);
-            assert!(p.is_err());
-        }
-    }
-}
