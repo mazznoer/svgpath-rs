@@ -1,8 +1,8 @@
 use std::fmt;
 
-use crate::Command;
 use crate::parser::{Parser, ParserError};
 use crate::simplify::simplify;
+use crate::{BBox, Command};
 
 // --- Path
 
@@ -35,7 +35,10 @@ impl Path {
     #[must_use]
     pub fn simplify(&self) -> SimplePath {
         let cmds = simplify(&self.commands);
-        SimplePath { commands: cmds }
+        SimplePath {
+            commands: cmds,
+            bbox: BBox::new(),
+        }
     }
 
     /// Split this path into individual non-connected subpaths.
@@ -95,6 +98,7 @@ impl fmt::Display for Path {
 #[derive(Debug, Clone)]
 pub struct SimplePath {
     commands: Vec<Command>,
+    bbox: BBox,
 }
 
 impl SimplePath {
@@ -102,12 +106,19 @@ impl SimplePath {
         self.commands.iter()
     }
 
+    /// Path bounding box
+    pub fn bbox(&mut self) -> BBox {
+        if self.bbox.min_x == f64::INFINITY {
+            self.bbox = crate::bbox::bbox(&self.commands).unwrap();
+        }
+        self.bbox.clone()
+    }
+
     /// Check if this path consist only of straight lines.
     pub fn is_flat(&self) -> bool {
         for cmd in &self.commands {
-            match cmd {
-                Command::Cubic { .. } => return false,
-                _ => {}
+            if let Command::Cubic { .. } = cmd {
+                return false;
             }
         }
         true

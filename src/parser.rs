@@ -179,7 +179,7 @@ impl From<LexerError> for ParserError {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Point {
+pub struct Point {
     pub x: f64,
     pub y: f64,
 }
