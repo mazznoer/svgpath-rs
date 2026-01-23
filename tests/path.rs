@@ -33,6 +33,19 @@ fn basic() {
 }
 
 #[test]
+fn split() {
+    let s = "M 25 67 H 90 V 150 M 5 7 L 90 55";
+    let p = svgpath::parse(s);
+    assert!(p.is_ok());
+    let p = p.unwrap();
+
+    let paths = p.split();
+    assert_eq!(paths.len(), 2);
+    assert_eq!(paths[0].to_string(), "M 25 67 H 90 V 150");
+    assert_eq!(paths[1].to_string(), "M 5 7 L 90 55");
+}
+
+#[test]
 fn invalid() {
     let test_data = [
         "",
@@ -44,6 +57,7 @@ fn invalid() {
         "M 3 5 L 5",
         "M 5 5 H 10 X 7 3 Z",
         "M 3 4 5 H 10 Z",
+        //"L 15 37 v 30 h 100 z",
     ];
     for s in test_data {
         let p = svgpath::parse(s);
