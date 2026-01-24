@@ -3,7 +3,8 @@ use std::fmt;
 use crate::matrix::transform_path;
 use crate::parser::{Parser, ParserError};
 use crate::simplify::simplify;
-use crate::{BBox, Command, Matrix};
+use crate::utils::inbox_matrix;
+use crate::{BBox, Command, Matrix, Rect};
 
 // --- Path
 
@@ -179,6 +180,14 @@ impl SimplePath {
             commands: cmds,
             bbox: BBox::new(),
         }
+    }
+
+    /// Fit this path into target rectangle
+    #[must_use]
+    pub fn fit(&mut self, target: &Rect, keep_aspect_ratio: bool, centered: bool) -> Self {
+        let src: Rect = (&self.bbox()).into();
+        let m = inbox_matrix(&src, target, keep_aspect_ratio, centered);
+        self.transform(&m)
     }
 
     /// Check if this path consist only of straight lines.
