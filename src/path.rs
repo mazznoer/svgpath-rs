@@ -1,8 +1,9 @@
 use std::fmt;
 
+use crate::matrix::transform_path;
 use crate::parser::{Parser, ParserError};
 use crate::simplify::simplify;
-use crate::{BBox, Command};
+use crate::{BBox, Command, Matrix};
 
 // --- Path
 
@@ -55,7 +56,6 @@ impl Path {
                         paths.push(Path {
                             commands: current_path.clone(),
                         });
-                        //current_path = Vec::new();
                         current_path.clear();
                     }
                     current_path.push(cmd.clone());
@@ -112,6 +112,15 @@ impl SimplePath {
             self.bbox = crate::bbox::bbox(&self.commands).unwrap();
         }
         self.bbox.clone()
+    }
+
+    #[must_use]
+    pub fn transform(&self, m: &Matrix) -> Self {
+        let cmds = transform_path(&self.commands, m);
+        Self {
+            commands: cmds,
+            bbox: BBox::new(),
+        }
     }
 
     /// Check if this path consist only of straight lines.

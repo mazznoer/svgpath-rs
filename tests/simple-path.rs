@@ -11,3 +11,15 @@ fn basic() {
         assert_eq!(sp.to_string(), output);
     }
 }
+
+#[test]
+fn transform() {
+    let s = "M 3 2 L 7 2 L 7 0 Z";
+    let p = svgpath::parse(s);
+    assert!(p.is_ok());
+    let sp = p.unwrap().simplify();
+
+    let m = svgpath::Matrix::new().translate(10.0, 5.0);
+    let res = sp.transform(&m);
+    assert_eq!(res.to_string(), "M 13 7 L 17 7 L 17 5 Z");
+}
