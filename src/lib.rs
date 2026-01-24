@@ -8,4 +8,4 @@ mod simplify;
 pub use bbox::BBox;
 pub use matrix::Matrix;
 pub use parser::{Command, ParserError, Point};
-pub use path::{Path, SimplePath, parse};
+pub use path::{CommandF32, Path, SimplePath, parse};

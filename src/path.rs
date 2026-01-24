@@ -27,7 +27,7 @@ impl Path {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Command> {
+    pub fn commands(&self) -> impl Iterator<Item = &Command> {
         self.commands.iter()
     }
 
@@ -94,6 +94,60 @@ impl fmt::Display for Path {
 
 // --- SimplePath
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum CommandF32 {
+    Move {
+        x: f32,
+        y: f32,
+    },
+    Line {
+        x: f32,
+        y: f32,
+    },
+    Cubic {
+        x1: f32, // Control point 1
+        y1: f32,
+        x2: f32, // Control point 2
+        y2: f32,
+        x: f32, // End point
+        y: f32,
+    },
+    Close,
+    Uncovered,
+}
+
+impl From<&Command> for CommandF32 {
+    fn from(cmd: &Command) -> Self {
+        match cmd {
+            Command::Move { x, y } => Self::Move {
+                x: *x as _,
+                y: *y as _,
+            },
+            Command::Line { x, y } => Self::Line {
+                x: *x as _,
+                y: *y as _,
+            },
+            Command::Cubic {
+                x1,
+                y1,
+                x2,
+                y2,
+                x,
+                y,
+            } => Self::Cubic {
+                x1: *x1 as _,
+                y1: *y1 as _,
+                x2: *x2 as _,
+                y2: *y2 as _,
+                x: *x as _,
+                y: *y as _,
+            },
+            Command::Close => Self::Close,
+            _ => Self::Uncovered,
+        }
+    }
+}
+
 /// `SimplePath` contains only absolute `M`, `L`, `C`, and `Z`.
 #[derive(Debug, Clone)]
 pub struct SimplePath {
@@ -102,8 +156,12 @@ pub struct SimplePath {
 }
 
 impl SimplePath {
-    pub fn iter(&self) -> impl Iterator<Item = &Command> {
+    pub fn commands(&self) -> impl Iterator<Item = &Command> {
         self.commands.iter()
+    }
+
+    pub fn commands_f32(&self) -> impl Iterator<Item = CommandF32> {
+        self.commands.iter().map(|cmd| cmd.into())
     }
 
     /// Path bounding box

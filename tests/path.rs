@@ -24,7 +24,7 @@ fn basic() {
     assert!(p.is_ok());
     let p = p.unwrap();
 
-    let mut it = p.iter();
+    let mut it = p.commands();
     assert_eq!(it.next(), Some(&Command::Move { x: 7.0, y: 9.0 }));
     assert_eq!(it.next(), Some(&Command::Line { x: 100.0, y: 75.0 }));
     assert_eq!(it.next(), Some(&Command::Horizontal { x: 50.0 }));
