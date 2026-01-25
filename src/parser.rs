@@ -81,7 +81,7 @@ impl fmt::Display for Command {
             } => {
                 write!(
                     f,
-                    "C {} {},{} {},{} {}",
+                    "C {} {} {} {} {} {}",
                     format_n(*x1),
                     format_n(*y1),
                     format_n(*x2),
@@ -93,7 +93,7 @@ impl fmt::Display for Command {
             Command::Quadratic { x1, y1, x, y } => {
                 write!(
                     f,
-                    "Q {} {},{} {}",
+                    "Q {} {} {} {}",
                     format_n(*x1),
                     format_n(*y1),
                     format_n(*x),
@@ -103,7 +103,7 @@ impl fmt::Display for Command {
             Command::SmoothCubic { x2, y2, x, y } => {
                 write!(
                     f,
-                    "S {} {},{} {}",
+                    "S {} {} {} {}",
                     format_n(*x2),
                     format_n(*y2),
                     format_n(*x),

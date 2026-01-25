@@ -176,61 +176,50 @@ fn arc_to_cubics(
     sweep: bool,
     end: Point,
 ) -> Vec<Command> {
-    // Correct radii (SVG Spec Requirement)
     rx = rx.abs();
     ry = ry.abs();
-    if rx == 0.0 || ry == 0.0 {
+    if rx < 1e-6 || ry < 1e-6 {
         return vec![Command::Line { x: end.x, y: end.y }];
     }
 
-    // Coordinate transformation (Rotation to local space)
+    // Center Parameterization (Simplified for precision)
     let phi = x_axis_rot.to_radians();
     let cos_phi = phi.cos();
     let sin_phi = phi.sin();
 
-    let dx = (start.x - end.x) / 2.0;
-    let dy = (start.y - end.y) / 2.0;
-    let x1p = cos_phi * dx + sin_phi * dy;
-    let y1p = -sin_phi * dx + cos_phi * dy;
+    let x1p = cos_phi * (start.x - end.x) / 2.0 + sin_phi * (start.y - end.y) / 2.0;
+    let y1p = -sin_phi * (start.x - end.x) / 2.0 + cos_phi * (start.y - end.y) / 2.0;
 
-    // Ensure radii are large enough to reach the end point
-    let lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
-    if lambda > 1.0 {
-        let sqrt_lambda = lambda.sqrt();
-        rx *= sqrt_lambda;
-        ry *= sqrt_lambda;
-    }
-
-    // Find the Center Point (cx', cy') in local space
     let rx2 = rx * rx;
     let ry2 = ry * ry;
     let x1p2 = x1p * x1p;
     let y1p2 = y1p * y1p;
 
+    let check = x1p2 / rx2 + y1p2 / ry2;
+    if check > 1.0 {
+        rx *= check.sqrt();
+        ry *= check.sqrt();
+    }
+
     let sign = if large_arc == sweep { -1.0 } else { 1.0 };
-    let numerator = (rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2).max(0.0);
-    let denominator = rx2 * y1p2 + ry2 * x1p2;
-    let coef = sign * (numerator / denominator).sqrt();
+    let n = (rx * rx * ry * ry - rx * rx * y1p2 - ry * ry * x1p2).max(0.0);
+    let d = rx * rx * y1p2 + ry * ry * x1p2;
+    let coef = sign * (n / d).sqrt();
 
-    let cxp = coef * (rx * y1p / ry);
-    let cyp = coef * -(ry * x1p / rx);
+    let cxp = coef * rx * y1p / ry;
+    let cyp = coef * -ry * x1p / rx;
 
-    // Transform center back to global space
     let cx = cos_phi * cxp - sin_phi * cyp + (start.x + end.x) / 2.0;
     let cy = sin_phi * cxp + cos_phi * cyp + (start.y + end.y) / 2.0;
 
-    // Calculate start angle and angle delta
-    let start_vec = Point {
-        x: (x1p - cxp) / rx,
-        y: (y1p - cyp) / ry,
-    };
-    let end_vec = Point {
-        x: (-x1p - cxp) / rx,
-        y: (-y1p - cyp) / ry,
-    };
-
-    let theta1 = angle_between(Point { x: 1.0, y: 0.0 }, start_vec);
-    let mut d_theta = angle_between(start_vec, end_vec);
+    // Angle Calculations
+    let theta1 = angle_between(1.0, 0.0, (x1p - cxp) / rx, (y1p - cyp) / ry);
+    let mut d_theta = angle_between(
+        (x1p - cxp) / rx,
+        (y1p - cyp) / ry,
+        (-x1p - cxp) / rx,
+        (-y1p - cyp) / ry,
+    );
 
     if !sweep && d_theta > 0.0 {
         d_theta -= 2.0 * PI;
@@ -239,30 +228,20 @@ fn arc_to_cubics(
         d_theta += 2.0 * PI;
     }
 
-    // Split into segments (max 90 degrees each)
-    let segments_count = (d_theta.abs() / (PI / 2.0)).ceil() as u32;
-    let delta = d_theta / segments_count as f64;
+    // Precise Splitting
+    let segments = (d_theta.abs() / (PI / 2.0 + 0.001)).ceil() as u32;
+    let delta = d_theta / segments as f64;
     let mut result = Vec::new();
-    let mut current_theta = theta1;
 
-    for _ in 0..segments_count {
-        result.push(approximate_unit_bezier(
-            cx,
-            cy,
-            rx,
-            ry,
-            phi,
-            current_theta,
-            delta,
-        ));
-        current_theta += delta;
+    for i in 0..segments {
+        let t_start = theta1 + i as f64 * delta;
+        result.push(single_arc_segment(cx, cy, rx, ry, phi, t_start, delta));
     }
 
     result
 }
 
-/// Approximates a segment of an ellipse with a Cubic Bezier
-fn approximate_unit_bezier(
+fn single_arc_segment(
     cx: f64,
     cy: f64,
     rx: f64,
@@ -274,35 +253,44 @@ fn approximate_unit_bezier(
     let cos_phi = phi.cos();
     let sin_phi = phi.sin();
 
-    let alpha = delta.sin() * ((4.0 / 3.0) * (1.0 - (delta / 2.0).cos()) / delta.sin());
+    // The precise "Kappa" for this specific angular delta
+    let kappa = (delta / 4.0).tan() * 4.0 / 3.0;
 
-    let cos_t = theta.cos();
-    let sin_t = theta.sin();
-    let cos_td = (theta + delta).cos();
-    let sin_td = (theta + delta).sin();
+    let t1 = theta;
+    let t2 = theta + delta;
 
-    // Local coordinates of start, end, and control points
-    let p1 = Point { x: cos_t, y: sin_t };
-    let p2 = Point {
-        x: cos_td,
-        y: sin_td,
+    let (cos1, sin1) = (t1.cos(), t1.sin());
+    let (cos2, sin2) = (t2.cos(), t2.sin());
+
+    // Local coordinates
+    let p1 = Point { x: cos1, y: sin1 };
+    let p2 = Point { x: cos2, y: sin2 };
+
+    // Derivative vectors for control points
+    let q1 = Point {
+        x: -kappa * sin1,
+        y: kappa * cos1,
     };
+    let q2 = Point {
+        x: -kappa * sin2,
+        y: kappa * cos2,
+    };
+
     let cp1 = Point {
-        x: p1.x - alpha * p1.y,
-        y: p1.y + alpha * p1.x,
+        x: p1.x + q1.x,
+        y: p1.y + q1.y,
     };
     let cp2 = Point {
-        x: p2.x + alpha * p2.y,
-        y: p2.y - alpha * p2.x,
+        x: p2.x - q2.x,
+        y: p2.y - q2.y,
     };
 
-    // Transform local points to global space (Scale + Rotate + Translate)
     let tr = |p: Point| -> (f64, f64) {
-        let tx = p.x * rx;
-        let ty = p.y * ry;
+        let x = p.x * rx;
+        let y = p.y * ry;
         (
-            cos_phi * tx - sin_phi * ty + cx,
-            sin_phi * tx + cos_phi * ty + cy,
+            cos_phi * x - sin_phi * y + cx,
+            sin_phi * x + cos_phi * y + cy,
         )
     };
 
@@ -320,8 +308,8 @@ fn approximate_unit_bezier(
     }
 }
 
-fn angle_between(v1: Point, v2: Point) -> f64 {
-    let dot = v1.x * v2.x + v1.y * v2.y;
-    let det = v1.x * v2.y - v1.y * v2.x;
+fn angle_between(ux: f64, uy: f64, vx: f64, vy: f64) -> f64 {
+    let dot = ux * vx + uy * vy;
+    let det = ux * vy - uy * vx;
     det.atan2(dot)
 }
