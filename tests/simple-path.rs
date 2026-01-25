@@ -94,7 +94,7 @@ fn tests() {
 
         let mut sp = p.simplify();
         assert_eq!(sp.to_string(), d.simple);
-        assert_eq!(sp.bbox(), td.bbox);
+        assert_eq!(sp.bbox(), d.bbox);
 
         let fp = sp.fit(&rect, true, true);
         assert_eq!(fp.to_string(), d.fit);

@@ -43,7 +43,7 @@ impl Path {
         }
     }
 
-    /// Split this path into individual non-connected subpaths.
+    /// Split this path into individual subpaths.
     #[must_use]
     pub fn split(&self) -> Vec<Path> {
         let mut paths = Vec::new();
@@ -173,6 +173,7 @@ impl SimplePath {
         self.bbox.clone()
     }
 
+    /// Apply a transformation matrix
     #[must_use]
     pub fn transform(&self, m: &Matrix) -> Self {
         let cmds = transform_path(&self.commands, m);
