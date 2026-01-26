@@ -1,3 +1,6 @@
+use std::fmt;
+
+use crate::parser::format_n;
 use crate::{Command, Point};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -129,6 +132,21 @@ impl Matrix {
             f: 0.0,
         };
         self.multiply(&m)
+    }
+}
+
+impl fmt::Display for Matrix {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "matrix({} {} {} {} {} {})",
+            format_n(self.a),
+            format_n(self.b),
+            format_n(self.c),
+            format_n(self.d),
+            format_n(self.e),
+            format_n(self.f)
+        )
     }
 }
 

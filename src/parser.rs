@@ -139,7 +139,7 @@ impl fmt::Display for Command {
     }
 }
 
-fn format_n(n: f64) -> String {
+pub(crate) fn format_n(n: f64) -> String {
     if n.fract() == 0.0 {
         format!("{:.0}", n)
     } else {
