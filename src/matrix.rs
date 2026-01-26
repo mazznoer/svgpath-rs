@@ -96,6 +96,11 @@ impl Matrix {
     }
 
     #[must_use]
+    pub fn rotate_by(&self, angle_deg: f64, x: f64, y: f64) -> Self {
+        self.translate(x, y).rotate(angle_deg).translate(-x, -y)
+    }
+
+    #[must_use]
     pub fn skew_x(&self, angle_deg: f64) -> Self {
         let m = Self {
             a: 1.0,
@@ -186,4 +191,19 @@ pub(crate) fn transform_path(commands: &[Command], matrix: &Matrix) -> Vec<Comma
             _ => None,
         })
         .collect()
+}
+
+#[cfg(test)]
+mod t {
+    use super::*;
+
+    #[test]
+    fn matrix() {
+        let a = Matrix::new()
+            .translate(15.0, 7.0)
+            .rotate(34.0)
+            .translate(-15.0, -7.0);
+        let b = Matrix::new().rotate_by(34.0, 15.0, 7.0);
+        assert_eq!(a, b);
+    }
 }
