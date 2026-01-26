@@ -3,7 +3,7 @@ use std::fmt;
 use crate::matrix::transform_path;
 use crate::parser::{Parser, ParserError};
 use crate::simplify::simplify;
-use crate::utils::inbox_matrix;
+use crate::utils;
 use crate::{BBox, Command, Matrix, Rect};
 
 // --- Path
@@ -46,36 +46,10 @@ impl Path {
     /// Split this path into individual subpaths.
     #[must_use]
     pub fn split(&self) -> Vec<Path> {
-        let mut paths = Vec::new();
-        let mut current_path = Vec::new();
-
-        for cmd in &self.commands {
-            match cmd {
-                // A Move command starts a new subpath
-                Command::Move { .. } => {
-                    if !current_path.is_empty() {
-                        paths.push(Path {
-                            commands: current_path.clone(),
-                        });
-                        current_path.clear();
-                    }
-                    current_path.push(cmd.clone());
-                }
-                // All other commands belong to the current subpath
-                _ => {
-                    current_path.push(cmd.clone());
-                }
-            }
-        }
-
-        // Push the final subpath if it exists
-        if !current_path.is_empty() {
-            paths.push(Path {
-                commands: current_path,
-            });
-        }
-
-        paths
+        utils::split(&self.commands)
+            .into_iter()
+            .map(|cmds| Path { commands: cmds })
+            .collect()
     }
 }
 
@@ -187,8 +161,20 @@ impl SimplePath {
     #[must_use]
     pub fn fit(&mut self, target: &Rect, keep_aspect_ratio: bool, centered: bool) -> Self {
         let src: Rect = (&self.bbox()).into();
-        let m = inbox_matrix(&src, target, keep_aspect_ratio, centered);
+        let m = utils::inbox_matrix(&src, target, keep_aspect_ratio, centered);
         self.transform(&m)
+    }
+
+    /// Split this path into individual subpaths.
+    #[must_use]
+    pub fn split(&self) -> Vec<SimplePath> {
+        utils::split(&self.commands)
+            .into_iter()
+            .map(|cmds| SimplePath {
+                commands: cmds,
+                bbox: BBox::new(),
+            })
+            .collect()
     }
 
     /// Check if this path consist only of straight lines.

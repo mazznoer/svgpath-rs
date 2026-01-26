@@ -1,4 +1,4 @@
-use crate::{BBox, Matrix};
+use crate::{BBox, Command, Matrix};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Rect {
@@ -73,4 +73,33 @@ pub(crate) fn inbox_matrix(
         e: tx,
         f: ty,
     }
+}
+
+pub(crate) fn split(commands: &[Command]) -> Vec<Vec<Command>> {
+    let mut paths = Vec::new();
+    let mut current_path = Vec::new();
+
+    for cmd in commands {
+        match cmd {
+            // A Move command starts a new subpath
+            Command::Move { .. } => {
+                if !current_path.is_empty() {
+                    paths.push(current_path.clone());
+                    current_path.clear();
+                }
+                current_path.push(cmd.clone());
+            }
+            // All other commands belong to the current subpath
+            _ => {
+                current_path.push(cmd.clone());
+            }
+        }
+    }
+
+    // Push the final subpath if it exists
+    if !current_path.is_empty() {
+        paths.push(current_path);
+    }
+
+    paths
 }
