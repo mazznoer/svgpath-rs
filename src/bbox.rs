@@ -126,10 +126,10 @@ pub(crate) fn bbox(commands: &[Command]) -> Option<BBox> {
     let mut cursor = Point { x: 0.0, y: 0.0 };
 
     for cmd in commands {
-        match cmd {
+        match *cmd {
             Command::Move { x, y } | Command::Line { x, y } => {
-                bounds.add_point(*x, *y);
-                cursor = Point { x: *x, y: *y };
+                bounds.add_point(x, y);
+                cursor = Point { x, y };
             }
             Command::Cubic {
                 x1,
@@ -139,9 +139,9 @@ pub(crate) fn bbox(commands: &[Command]) -> Option<BBox> {
                 x,
                 y,
             } => {
-                let cp1 = Point { x: *x1, y: *y1 };
-                let cp2 = Point { x: *x2, y: *y2 };
-                let end = Point { x: *x, y: *y };
+                let cp1 = Point { x: x1, y: y1 };
+                let cp2 = Point { x: x2, y: y2 };
+                let end = Point { x, y };
 
                 bounds.add_cubic(cursor, cp1, cp2, end);
                 cursor = end;

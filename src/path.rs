@@ -93,14 +93,14 @@ pub enum CommandF32 {
 
 impl From<&Command> for CommandF32 {
     fn from(cmd: &Command) -> Self {
-        match cmd {
+        match *cmd {
             Command::Move { x, y } => Self::Move {
-                x: *x as _,
-                y: *y as _,
+                x: x as _,
+                y: y as _,
             },
             Command::Line { x, y } => Self::Line {
-                x: *x as _,
-                y: *y as _,
+                x: x as _,
+                y: y as _,
             },
             Command::Cubic {
                 x1,
@@ -110,12 +110,12 @@ impl From<&Command> for CommandF32 {
                 x,
                 y,
             } => Self::Cubic {
-                x1: *x1 as _,
-                y1: *y1 as _,
-                x2: *x2 as _,
-                y2: *y2 as _,
-                x: *x as _,
-                y: *y as _,
+                x1: x1 as _,
+                y1: y1 as _,
+                x2: x2 as _,
+                y2: y2 as _,
+                x: x as _,
+                y: y as _,
             },
             Command::Close => Self::Close,
             _ => Self::Uncovered,

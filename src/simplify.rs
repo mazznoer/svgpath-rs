@@ -9,20 +9,20 @@ pub(crate) fn simplify(commands: &[Command]) -> Vec<Command> {
     let mut last_control_point: Option<Point> = None;
 
     for cmd in commands {
-        match cmd {
+        match *cmd {
             Command::Move { x, y } => {
-                cursor = Point { x: *x, y: *y };
+                cursor = Point { x, y };
                 last_control_point = None;
-                simplified.push(Command::Move { x: *x, y: *y });
+                simplified.push(Command::Move { x, y });
             }
             Command::Line { x, y } => {
-                cursor = Point { x: *x, y: *y };
+                cursor = Point { x, y };
                 last_control_point = None;
-                simplified.push(Command::Line { x: *x, y: *y });
+                simplified.push(Command::Line { x, y });
             }
             // Convert Horizontal to Line
             Command::Horizontal { x } => {
-                cursor.x = *x;
+                cursor.x = x;
                 last_control_point = None;
                 simplified.push(Command::Line {
                     x: cursor.x,
@@ -31,7 +31,7 @@ pub(crate) fn simplify(commands: &[Command]) -> Vec<Command> {
             }
             // Convert Vertical to Line
             Command::Vertical { y } => {
-                cursor.y = *y;
+                cursor.y = y;
                 last_control_point = None;
                 simplified.push(Command::Line {
                     x: cursor.x,
@@ -46,36 +46,36 @@ pub(crate) fn simplify(commands: &[Command]) -> Vec<Command> {
                 x,
                 y,
             } => {
-                cursor = Point { x: *x, y: *y };
-                last_control_point = Some(Point { x: *x2, y: *y2 });
+                cursor = Point { x, y };
+                last_control_point = Some(Point { x: x2, y: y2 });
                 simplified.push(Command::Cubic {
-                    x1: *x1,
-                    y1: *y1,
-                    x2: *x2,
-                    y2: *y2,
-                    x: *x,
-                    y: *y,
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    x,
+                    y,
                 });
             }
             // Convert Smooth Cubic to Cubic
             Command::SmoothCubic { x2, y2, x, y } => {
                 let p1 = reflect(last_control_point, cursor);
-                last_control_point = Some(Point { x: *x2, y: *y2 });
-                cursor = Point { x: *x, y: *y };
+                last_control_point = Some(Point { x: x2, y: y2 });
+                cursor = Point { x, y };
                 simplified.push(Command::Cubic {
                     x1: p1.x,
                     y1: p1.y,
-                    x2: *x2,
-                    y2: *y2,
-                    x: *x,
-                    y: *y,
+                    x2,
+                    y2,
+                    x,
+                    y,
                 });
             }
             // Convert Quadratic to Cubic
             // Math: CP1 = Q0 + 2/3(Q1-Q0), CP2 = Q2 + 2/3(Q1-Q2)
             Command::Quadratic { x1, y1, x, y } => {
-                let q1 = Point { x: *x1, y: *y1 };
-                let q2 = Point { x: *x, y: *y };
+                let q1 = Point { x: x1, y: y1 };
+                let q2 = Point { x, y };
                 let cp1 = Point {
                     x: cursor.x + 2.0 / 3.0 * (q1.x - cursor.x),
                     y: cursor.y + 2.0 / 3.0 * (q1.y - cursor.y),
@@ -98,7 +98,7 @@ pub(crate) fn simplify(commands: &[Command]) -> Vec<Command> {
             // Convert Smooth Quadratic to Cubic
             Command::SmoothQuadratic { x, y } => {
                 let q1 = reflect(last_control_point, cursor);
-                let q2 = Point { x: *x, y: *y };
+                let q2 = Point { x, y };
                 let cp1 = Point {
                     x: cursor.x + 2.0 / 3.0 * (q1.x - cursor.x),
                     y: cursor.y + 2.0 / 3.0 * (q1.y - cursor.y),
@@ -127,16 +127,16 @@ pub(crate) fn simplify(commands: &[Command]) -> Vec<Command> {
                 x,
                 y,
             } => {
-                let target = Point { x: *x, y: *y };
+                let target = Point { x, y };
 
                 // Convert Arc to a series of Cubic Beziers
                 let beziers = arc_to_cubics(
                     cursor,
-                    *rx,
-                    *ry,
-                    *x_axis_rotation,
-                    *large_arc_flag,
-                    *sweep_flag,
+                    rx,
+                    ry,
+                    x_axis_rotation,
+                    large_arc_flag,
+                    sweep_flag,
                     target,
                 );
 

@@ -158,13 +158,13 @@ impl fmt::Display for Matrix {
 pub(crate) fn transform_path(commands: &[Command], matrix: &Matrix) -> Vec<Command> {
     commands
         .iter()
-        .filter_map(|cmd| match cmd {
+        .filter_map(|cmd| match *cmd {
             Command::Move { x, y } => {
-                let p = matrix.transform_point(Point { x: *x, y: *y });
+                let p = matrix.transform_point(Point { x, y });
                 Some(Command::Move { x: p.x, y: p.y })
             }
             Command::Line { x, y } => {
-                let p = matrix.transform_point(Point { x: *x, y: *y });
+                let p = matrix.transform_point(Point { x, y });
                 Some(Command::Line { x: p.x, y: p.y })
             }
             Command::Cubic {
@@ -175,9 +175,9 @@ pub(crate) fn transform_path(commands: &[Command], matrix: &Matrix) -> Vec<Comma
                 x,
                 y,
             } => {
-                let p1 = matrix.transform_point(Point { x: *x1, y: *y1 });
-                let p2 = matrix.transform_point(Point { x: *x2, y: *y2 });
-                let p = matrix.transform_point(Point { x: *x, y: *y });
+                let p1 = matrix.transform_point(Point { x: x1, y: y1 });
+                let p2 = matrix.transform_point(Point { x: x2, y: y2 });
+                let p = matrix.transform_point(Point { x, y });
                 Some(Command::Cubic {
                     x1: p1.x,
                     y1: p1.y,
@@ -205,5 +205,13 @@ mod t {
             .translate(-15.0, -7.0);
         let b = Matrix::new().rotate_by(34.0, 15.0, 7.0);
         assert_eq!(a, b);
+        assert_eq!(a.to_string(), b.to_string());
+
+        let m = Matrix::new()
+            .rotate_by(-10.0, 50.0, 100.0)
+            .translate(-36.0, 45.5)
+            .skew_x(40.0)
+            .scale(1.0, 0.5);
+        assert_eq!(m.to_string(), "matrix(0.98 -0.17 0.5 0.42 -44.16 61.26)");
     }
 }
