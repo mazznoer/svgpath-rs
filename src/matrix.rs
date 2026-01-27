@@ -1,7 +1,7 @@
 use std::fmt;
 
+use crate::Command;
 use crate::parser::format_n;
-use crate::{Command, Point};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
@@ -33,11 +33,11 @@ impl Matrix {
     }
 
     /// Transforms a point: x' = ax + cy + e, y' = bx + dy + f
-    fn transform_point(&self, p: Point) -> Point {
-        Point {
-            x: self.a * p.x + self.c * p.y + self.e,
-            y: self.b * p.x + self.d * p.y + self.f,
-        }
+    fn transform_point(&self, x: f64, y: f64) -> [f64; 2] {
+        [
+            self.a * x + self.c * y + self.e,
+            self.b * x + self.d * y + self.f,
+        ]
     }
 
     /// Multiply two matrices (Combine transformations)
@@ -160,12 +160,12 @@ pub(crate) fn transform_path(commands: &[Command], matrix: &Matrix) -> Vec<Comma
         .iter()
         .filter_map(|cmd| match *cmd {
             Command::Move { x, y } => {
-                let p = matrix.transform_point(Point { x, y });
-                Some(Command::Move { x: p.x, y: p.y })
+                let [x, y] = matrix.transform_point(x, y);
+                Some(Command::Move { x, y })
             }
             Command::Line { x, y } => {
-                let p = matrix.transform_point(Point { x, y });
-                Some(Command::Line { x: p.x, y: p.y })
+                let [x, y] = matrix.transform_point(x, y);
+                Some(Command::Line { x, y })
             }
             Command::Cubic {
                 x1,
@@ -175,16 +175,16 @@ pub(crate) fn transform_path(commands: &[Command], matrix: &Matrix) -> Vec<Comma
                 x,
                 y,
             } => {
-                let p1 = matrix.transform_point(Point { x: x1, y: y1 });
-                let p2 = matrix.transform_point(Point { x: x2, y: y2 });
-                let p = matrix.transform_point(Point { x, y });
+                let [x1, y1] = matrix.transform_point(x1, y1);
+                let [x2, y2] = matrix.transform_point(x2, y2);
+                let [x, y] = matrix.transform_point(x, y);
                 Some(Command::Cubic {
-                    x1: p1.x,
-                    y1: p1.y,
-                    x2: p2.x,
-                    y2: p2.y,
-                    x: p.x,
-                    y: p.y,
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    x,
+                    y,
                 })
             }
             Command::Close => Some(Command::Close),
