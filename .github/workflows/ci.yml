@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run: |
         cargo build
-    #    cargo build --examples
+        cargo build --examples
 
     - name: Run tests
       run: |
