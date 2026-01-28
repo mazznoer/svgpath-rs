@@ -92,7 +92,7 @@ fn tests() {
         let p = p.unwrap();
         assert_eq!(p.to_string(), d.path);
 
-        let mut sp = p.simplify();
+        let sp = p.simplify();
         assert_eq!(sp.to_string(), d.simple);
         assert_eq!(sp.bbox(), d.bbox);
 

@@ -14,7 +14,7 @@ fn main() {
     let p = svgpath::parse(s).unwrap();
 
     // Convert to SimplePath
-    let mut sp = p.simplify();
+    let sp = p.simplify();
 
     // Get the bounding box
     let bb = sp.bbox();
@@ -24,7 +24,7 @@ fn main() {
 
     // Scale and translate to fit inside 700 x 700 rectangle at X=50 and Y=50
     let rect = svgpath::Rect::new(50.0, 50.0, 700.0, 700.0);
-    let mut sp = sp.fit(&rect, true, true);
+    let sp = sp.fit(&rect, true, true);
 
     // Rotate 35 degree by its center point
     let center = sp.bbox().center();

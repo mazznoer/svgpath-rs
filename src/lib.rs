@@ -18,19 +18,18 @@
 //! let p = svgpath::parse(s)?;
 //!
 //! // Convert to SimplePath
-//! let mut sp = p.simplify();
+//! let sp = p.simplify();
 //!
 //! // Scale and translate to fit inside 700 x 700 rectangle at X=50 and Y=50
 //! let rect = svgpath::Rect::new(50.0, 50.0, 700.0, 700.0);
-//! let mut sp = sp.fit(&rect, true, true);
+//! let sp = sp.fit(&rect, true, true);
 //!
-//! // Rotate 35 degree by its center point
+//! // Rotate 35 degrees by its center point and scale up
 //! let center = sp.bbox().center();
 //! let m = svgpath::Matrix::new()
-//!     .translate(center.x, center.y)
-//!     .rotate(35.0)
-//!     .translate(-center.x, -center.y);
-//! let mut sp = sp.transform(&m);
+//!     .rotate_by(35.0, center.x, center.y)
+//!     .scale(2.0, 2.0);
+//! let sp = sp.transform(&m);
 //!
 //! // Print SVG path d.
 //! println!("{sp}");

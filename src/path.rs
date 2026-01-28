@@ -17,8 +17,8 @@ pub struct Path {
 /// Parse SVG Path string, convert all commands into absolute commands.
 pub fn parse(s: &str) -> Result<Path, ParserError> {
     let mut p = Parser::new(s);
-    let cmds = p.parse()?;
-    Ok(Path { commands: cmds })
+    let commands = p.parse()?;
+    Ok(Path { commands })
 }
 
 impl Path {
@@ -36,11 +36,8 @@ impl Path {
     /// `Q`, `S`, `T`, `A` --> `C`
     #[must_use]
     pub fn simplify(&self) -> SimplePath {
-        let cmds = simplify(&self.commands);
-        SimplePath {
-            commands: cmds,
-            bbox: BBox::new(),
-        }
+        let commands = simplify(&self.commands);
+        SimplePath { commands }
     }
 
     /// Split this path into individual subpaths.
@@ -48,7 +45,7 @@ impl Path {
     pub fn split(&self) -> Vec<Path> {
         utils::split(&self.commands)
             .into_iter()
-            .map(|cmds| Path { commands: cmds })
+            .map(|commands| Path { commands })
             .collect()
     }
 }
@@ -127,7 +124,6 @@ impl From<&Command> for CommandF32 {
 #[derive(Debug, Clone)]
 pub struct SimplePath {
     commands: Vec<Command>,
-    bbox: BBox,
 }
 
 impl SimplePath {
@@ -140,27 +136,22 @@ impl SimplePath {
     }
 
     /// Path bounding box
-    pub fn bbox(&mut self) -> BBox {
-        if self.bbox.min_x == f64::INFINITY {
-            self.bbox = crate::bbox::bbox(&self.commands).unwrap();
-        }
-        self.bbox.clone()
+    pub fn bbox(&self) -> BBox {
+        crate::bbox::bbox(&self.commands).unwrap()
     }
 
     /// Apply a transformation matrix
     #[must_use]
     pub fn transform(&self, m: &Matrix) -> Self {
-        let cmds = transform_path(&self.commands, m);
-        Self {
-            commands: cmds,
-            bbox: BBox::new(),
-        }
+        let commands = transform_path(&self.commands, m);
+        Self { commands }
     }
 
     /// Fit this path into target rectangle
     #[must_use]
-    pub fn fit(&mut self, target: &Rect, keep_aspect_ratio: bool, centered: bool) -> Self {
-        let src: Rect = (&self.bbox()).into();
+    pub fn fit(&self, target: &Rect, keep_aspect_ratio: bool, centered: bool) -> Self {
+        let bb = self.bbox();
+        let src: Rect = (&bb).into();
         let m = utils::inbox_matrix(&src, target, keep_aspect_ratio, centered);
         self.transform(&m)
     }
@@ -170,10 +161,7 @@ impl SimplePath {
     pub fn split(&self) -> Vec<SimplePath> {
         utils::split(&self.commands)
             .into_iter()
-            .map(|cmds| SimplePath {
-                commands: cmds,
-                bbox: BBox::new(),
-            })
+            .map(|commands| SimplePath { commands })
             .collect()
     }
 
