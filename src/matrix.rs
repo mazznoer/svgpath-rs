@@ -138,6 +138,89 @@ impl Matrix {
         };
         self.multiply(&m)
     }
+
+    /// Parses an SVG transform string
+    pub fn parse(input: &str) -> Result<Self, String> {
+        let mut result = Matrix::new();
+
+        // Replace commas/parens with spaces to easily tokenize,
+        // but keep the function names identifiable.
+        let normalized = input
+            .replace(',', " ")
+            .replace('(', " ( ")
+            .replace(')', " ) ");
+
+        let mut tokens = normalized.split_whitespace().peekable();
+
+        while let Some(func_name) = tokens.next() {
+            // Expect an opening parenthesis next
+            match tokens.next() {
+                Some("(") => {}
+                _ => return Err(format!("Expected '(' after {}", func_name)),
+            }
+
+            // Collect all numbers until the closing parenthesis
+            let mut nums = Vec::new();
+            while let Some(&next_token) = tokens.peek() {
+                if next_token == ")" {
+                    // Consume ')'
+                    tokens.next();
+                    break;
+                }
+                let n: f64 = tokens
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .map_err(|_| format!("Invalid number in {}", func_name))?;
+                nums.push(n);
+            }
+
+            if nums.is_empty() {
+                return Err(format!("No arguments provided for {}", func_name));
+            }
+
+            match func_name.to_lowercase().as_str() {
+                "matrix" if nums.len() == 6 => {
+                    let m = Matrix {
+                        a: nums[0],
+                        b: nums[1],
+                        c: nums[2],
+                        d: nums[3],
+                        e: nums[4],
+                        f: nums[5],
+                    };
+                    result = result.multiply(&m);
+                }
+                "translate" => {
+                    let tx = nums[0];
+                    let ty = nums.get(1).cloned().unwrap_or(0.0);
+                    result = result.translate(tx, ty);
+                }
+                "scale" => {
+                    let sx = nums[0];
+                    let sy = nums.get(1).cloned().unwrap_or(sx);
+                    result = result.scale(sx, sy);
+                }
+                "rotate" => {
+                    let angle = nums[0];
+                    if nums.len() == 3 {
+                        result = result.rotate_by(angle, nums[1], nums[2]);
+                    } else {
+                        result = result.rotate(angle);
+                    }
+                }
+                "skewx" => {
+                    result = result.skew_x(nums[0]);
+                }
+                "skewy" => {
+                    result = result.skew_y(nums[0]);
+                }
+                _ => return Err(format!("Unknown or invalid transform: {}", func_name)),
+            };
+        }
+
+        Ok(result)
+    }
 }
 
 impl fmt::Display for Matrix {
@@ -213,5 +296,30 @@ mod t {
             .skew_x(40.0)
             .scale(1.0, 0.5);
         assert_eq!(m.to_string(), "matrix(0.98 -0.17 0.5 0.42 -44.16 61.26)");
+    }
+
+    #[test]
+    fn parse_str() {
+        let m1 = Matrix::new()
+            .translate(5.0, 13.0)
+            .scale(1.75, 1.75)
+            .rotate_by(35.0, 100.0, 75.0)
+            .translate(-8.0, -10.0);
+
+        let s = "
+        translate(5, 13)
+        scale(1.75)
+        rotate(35, 100, 75)
+        translate(-8.0, -10)
+        ";
+
+        let m2 = Matrix::parse(s);
+        if m2.is_err() {
+            println!("{:?}", m2.clone().unwrap_err());
+        }
+        assert!(m2.is_ok());
+        let m2 = m2.unwrap();
+        assert_eq!(m1, m2);
+        assert_eq!(m1.to_string(), m2.to_string());
     }
 }
