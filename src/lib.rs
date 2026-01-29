@@ -54,6 +54,7 @@ mod lexer;
 mod matrix;
 mod parser;
 mod path;
+mod reverse;
 mod simplify;
 mod utils;
 

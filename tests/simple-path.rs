@@ -115,3 +115,31 @@ fn transform() {
     let res = sp.transform(&m);
     assert_eq!(res.to_string(), "M 13 7 L 17 7 L 17 5 Z");
 }
+
+#[test]
+fn reverse() {
+    #[rustfmt::skip]
+    let test_data = [
+        [
+            "M 10 7 L 139 15",
+            "M 139 15 L 10 7",
+        ],
+        [
+            "L 10 30 L 200 100",
+            "M 200 100 L 10 30",
+        ],
+        [
+            "M 10,30A 20,20 0,0,1 50,30A 20,20 0,0,1 90,30Q 90,60 50,90Q 10,60 10,30Z",
+            "M 10 30 C 10 50 23.33 70 50 90 C 76.67 70 90 50 90 30 C 90 18.95 81.05 10 70 10 C 58.95 10 50 18.95 50 30 C 50 18.95 41.05 10 30 10 C 18.95 10 10 18.95 10 30 Z",
+        ],
+    ];
+    for [input, expected] in test_data {
+        let p = svgpath::parse(input);
+        assert!(p.is_ok());
+        let sp = p.unwrap().simplify();
+        let rev = sp.reverse();
+
+        assert_eq!(rev.to_string(), expected);
+        assert_eq!(rev.bbox(), sp.bbox());
+    }
+}

@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::matrix::transform_path;
 use crate::parser::{Parser, ParserError};
+use crate::reverse::reverse_path;
 use crate::simplify::simplify;
 use crate::utils;
 use crate::{BBox, Command, Matrix, Rect};
@@ -154,6 +155,13 @@ impl SimplePath {
         let src: Rect = (&bb).into();
         let m = utils::inbox_matrix(&src, target, keep_aspect_ratio, centered);
         self.transform(&m)
+    }
+
+    /// Reverse path direction
+    #[must_use]
+    pub fn reverse(&self) -> Self {
+        let commands = reverse_path(&self.commands);
+        Self { commands }
     }
 
     /// Split this path into individual subpaths.
