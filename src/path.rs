@@ -49,6 +49,10 @@ impl Path {
             .map(|commands| Path { commands })
             .collect()
     }
+
+    pub fn subpaths_count(&self) -> usize {
+        utils::split_count(&self.commands)
+    }
 }
 
 impl fmt::Display for Path {
@@ -171,6 +175,10 @@ impl SimplePath {
             .into_iter()
             .map(|commands| SimplePath { commands })
             .collect()
+    }
+
+    pub fn subpaths_count(&self) -> usize {
+        utils::split_count(&self.commands)
     }
 
     /// Check if this path consist only of straight lines.

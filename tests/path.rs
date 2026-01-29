@@ -40,6 +40,7 @@ fn split() {
     let p = p.unwrap();
 
     let paths = p.split();
+    assert_eq!(p.subpaths_count(), 2);
     assert_eq!(paths.len(), 2);
     assert_eq!(paths[0].to_string(), "M 25 67 H 90 V 150");
     assert_eq!(paths[1].to_string(), "M 5 7 L 90 55");

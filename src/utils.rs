@@ -103,3 +103,19 @@ pub(crate) fn split(commands: &[Command]) -> Vec<Vec<Command>> {
 
     paths
 }
+
+pub(crate) fn split_count(commands: &[Command]) -> usize {
+    if commands.is_empty() {
+        return 0;
+    }
+    let mut total = 0;
+    if !matches!(commands[0], Command::Move { .. }) {
+        total += 1;
+    }
+    for cmd in commands {
+        if let Command::Move { .. } = cmd {
+            total += 1;
+        }
+    }
+    total
+}
